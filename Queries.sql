@@ -1,46 +1,36 @@
--- INNER JOIN 
--- Lấy thông tin hợp đồng và khách hàng
-SELECT KhachHang.HoTen, HopDong.MaNha, HopDong.NgayBatDau, HopDong.NgayKetThuc
+-- 1. Query using INNER JOIN
+-- Lấy thông tin hợp đồng, khách hàng, và nhà cho thuê
+SELECT KhachHang.HoTen AS TenKH, NhaChoThue.DiaChi AS DiaChiNha, HopDong.NgayBatDau, HopDong.NgayKetThuc
 FROM HopDong
-INNER JOIN KhachHang ON HopDong.MaKH = KhachHang.MaKH;
+INNER JOIN KhachHang ON HopDong.MaKH = KhachHang.MaKH
+INNER JOIN NhaChoThue ON HopDong.MaNha = NhaChoThue.MaNha;
 
-
--- LEFT OUTER JOIN 
--- Tấy tất cả khách hàng và hợp đồng (bao gồm cả những khách hàng không có hợp đồng)
-SELECT KhachHang.HoTen, HopDong.MaNha, HopDong.NgayBatDau, HopDong.NgayKetThuc
+-- 2. Query using OUTER JOIN
+-- Lấy thông tin khách hàng và hợp đồng thuê
+SELECT KhachHang.HoTen AS TenKH, NhaChoThue.DiaChi AS DiaChiNha, HopDong.NgayBatDau, HopDong.NgayKetThuc
 FROM KhachHang
-LEFT OUTER JOIN HopDong ON KhachHang.MaKH = HopDong.MaKH;
+LEFT OUTER JOIN HopDong ON KhachHang.MaKH = HopDong.MaKH
+LEFT OUTER JOIN NhaChoThue ON HopDong.MaNha = NhaChoThue.MaNha;
 
-
--- SUBQUERY IN WHERE 
--- Tìm kiếm các khách hàng đã thuê nhà có giá thuê trên 10 triệu
-SELECT KhachHang.HoTen
+-- 3. Using Subquery in WHERE
+-- Tìm khách hàng có hợp đồng thuê với giá thuê lớn hơn giá thuê trung bình
+SELECT KhachHang.HoTen AS TenKH, PhieuThue.GiaThue
 FROM KhachHang
-WHERE KhachHang.MaKH IN (
-    SELECT HopDong.MaKH -- Lọc các khách hàng có hợp đồng thuê nhà với giá thuê > 10 triệu
-    FROM HopDong
-    INNER JOIN NhaChoThue ON HopDong.MaNha = NhaChoThue.MaNha
-    WHERE NhaChoThue.GiaThue > 10000000
-);
+INNER JOIN PhieuThue ON KhachHang.MaKH = PhieuThue.MaKH
+WHERE PhieuThue.GiaThue > (SELECT AVG(GiaThue) FROM PhieuThue);
 
+-- 4. Using Subquery in FROM
+-- Lấy danh sách khách hàng có tổng tiền thuê lớn hơn 100 triệu
+SELECT TenKH, TongTien
+FROM (SELECT KhachHang.HoTen AS TenKH, SUM(PhieuThue.GiaThue) AS TongTien
+      FROM KhachHang
+      INNER JOIN PhieuThue ON KhachHang.MaKH = PhieuThue.MaKH
+      GROUP BY KhachHang.MaKH) AS Subquery
+WHERE TongTien > 10000000;
 
--- SUBQUERY IN FROM
--- Tính trung bình số hợp đồng của khách hàng cho mỗi cơ quan
-SELECT KhachHang.CoQuan, AVG(ContractCount) AS AvgContracts
-FROM (
-    SELECT KhachHang.MaKH, COUNT(HopDong.MaNha) AS ContractCount
-    FROM KhachHang
-    JOIN HopDong ON KhachHang.MaKH = HopDong.MaKH
-    GROUP BY KhachHang.MaKH
-) AS UserContracts
-JOIN KhachHang ON UserContracts.MaKH = KhachHang.MaKH
-GROUP BY KhachHang.CoQuan;
-
-
-
--- QUERY USING GROUP BY AND AGGREGATE FUNCTIONS
--- Tính tổng số hợp đồng của mỗi khách hàng
-SELECT KhachHang.HoTen, COUNT(HopDong.MaNha) AS SoHopDong
+-- 5. Query using GROUP BY and Aggregate Functions
+-- Tính tổng số tiền thuê của các khách hàng
+SELECT KhachHang.HoTen AS TenKH, SUM(PhieuThue.GiaThue) AS TongTienThue
 FROM KhachHang
-LEFT JOIN HopDong ON KhachHang.MaKH = HopDong.MaKH
+INNER JOIN PhieuThue ON KhachHang.MaKH = PhieuThue.MaKH
 GROUP BY KhachHang.MaKH;

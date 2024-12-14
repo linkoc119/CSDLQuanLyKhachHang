@@ -1,23 +1,42 @@
 -- Thêm khách hàng và hợp đồng, sau đó hủy
 START TRANSACTION;
 INSERT INTO KhachHang (HoTen, SoDienThoai, CoQuan)
-VALUES ('Nguyen Thi Mai', '0987654321', 'Bệnh viện HCM');
-INSERT INTO HopDong (MaKH, MaNha, NgayBatDau, NgayKetThuc)
-VALUES (LAST_INSERT_ID(), '11', '2024-01-01', '2025-01-01');
+VALUES ('Le Minh Tuan', '0356900905', 'Công ty XYZ');
+INSERT INTO HopDong (MaNha, MaKH, NgayBatDau, NgayKetThuc)
+VALUES (2, LAST_INSERT_ID(), '2024-12-01', '2025-12-01');
 ROLLBACK;
 
--- Thêm nhà sau đó hủy
+-- Cập nhật tên chủ nhà
 START TRANSACTION;
-INSERT INTO NhaChoThue (MaNha, DiaChi, GiaThue, TenChuNha)
-VALUES (12, '72 Nguyen Trai, Hanoi', 5000, 'Mr. A');
+UPDATE NhaChoThue
+SET TenChuNha = 'Anh A'
+WHERE MaNha = 1;
 ROLLBACK;
 
--- Cập nhật hợp đồng và hóa đơn, sau đó hủy
+-- Xóa khách hàng và các thông tin liên quan
 START TRANSACTION;
-UPDATE HopDong
-SET NgayKetThuc = '2025-12-31'
-WHERE MaNha = '1' AND MaKH = 1;
-UPDATE HoaDon
-SET TongTien = TongTien + 500
-WHERE MaKH = 1 AND MaNha = '1';
+DELETE FROM HoaDon WHERE MaKH = 1;
+DELETE FROM PhieuThue WHERE MaKH = 1;
+DELETE FROM HopDong WHERE MaKH = 1;
+DELETE FROM KhachHang WHERE MaKH = 1;
+ROLLBACK;
+
+-- Cập nhật trạng thái nhà và thêm phiếu thuê mới
+START TRANSACTION;
+UPDATE NhaChoThue
+SET TinhTrang = 'Đã thuê'
+WHERE MaNha = 3;
+INSERT INTO PhieuThue (MaNha, MaKH, NgayBatDau, NgayKetThuc, GiaThue)
+VALUES (3, 2, '2024-12-01', '2025-12-01', 3000.00);
+ROLLBACK;
+
+-- Đổi trạng thái nhà cho thuê và thêm dịch vụ mới
+START TRANSACTION;
+UPDATE NhaChoThue
+SET TinhTrang = 'Đang bảo trì'
+WHERE MaNha = 4;
+INSERT INTO DichVu (TenDV, GiaDV)
+VALUES ('Dịch vụ vệ sinh', 500.00);
+INSERT INTO PhieuDichVu (MaPT, MaDV, NgayLap, ThanhTien)
+VALUES (1, LAST_INSERT_ID(), CURDATE(), 500.00);
 ROLLBACK;
