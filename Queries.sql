@@ -31,7 +31,7 @@ JOIN KhachHang KH ON KH.MaKH = TotalRent.MaKH
 WHERE TotalRent.TongTienThue > 100000000;
 
 -- 5. Query using GROUP BY and Aggregate Functions
--- Tính tổng số tiền thuê của các khách hàng
+-- In ra tiền thuê của các khách hàng
 SELECT KhachHang.HoTen AS TenKH, SUM(PhieuThue.GiaThue) AS TongTienThue
 FROM KhachHang
 INNER JOIN PhieuThue ON KhachHang.MaKH = PhieuThue.MaKH
